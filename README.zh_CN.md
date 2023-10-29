@@ -9,7 +9,7 @@
 本项目实现了以下内核回调的清除：
 
 1. 删除 `CmRegisterCallback(Ex)` 注册的回调
-2. 删除 `MiniFilter微过滤器驱动`注册的回调 (目前适配了win10和win11，win7 正在适配中)
+2. 删除 `MiniFilter微过滤器驱动`注册的回调 (**目前仅适配了win10**，win7和win11正在适配中)
 3. 删除 `ObRegisterCallbacks()` 注册的回调
 4. 删除 `PsSetCreateProcessNotifyRoutine(Ex)` 注册的回调
 5. 删除 `PsSetCreateThreadNotifyRoutine(Ex)` 注册的回调
@@ -48,7 +48,7 @@
     
     `#define DrivePath "driver_fullpath"`  用于指定驱动所在路径
     
-    dbutil_2_3.sys 驱动支持win7及以上版本，但由于证书变黑问题可能在Win11上无法加载。
+    dbutil_2_3.sys 驱动支持win7及以上版本，在win11无法加载，提示证书已吊销。
 	 
 	 echo_driver.sys 驱动仅支持win10及以上版本，目前无其他限制。
 2. 编译项目并在安装有AV/EDR 的电脑上双击执行。(如果文件不免杀，请自行编写免杀的shellcode 加载器，然后将其转换成shellcode 后加载)

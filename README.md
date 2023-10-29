@@ -11,7 +11,7 @@ If you want to understand the implementation principle, you can refer to the ana
 This project implements the clearing of the following kernel callbacks:
 
 1. Delete the callback registered by `CmRegisterCallback(Ex)`
-2. Delete the callback registered by `MiniFilter driver` (currently adapted to win10 and win11, win7 is being adapted)
+2. Delete the callback registered by `MiniFilter driver` (**Currently only adapted to win10** , win7 and win11 is being adapted)
 3. Delete the callbacks registered by `ObRegisterCallbacks()`
 4. Delete the callback registered by `PsSetCreateProcessNotifyRoutine(Ex)`
 5. Delete the callback registered by `PsSetCreateThreadNotifyRoutine(Ex)`
@@ -50,7 +50,7 @@ This project is not targeted at any AV/EDR manufacturers. The code examples are 
    
    `#define DrivePath "driver_fullpath"` is used to specify the path where the driver is located
      
-    The dbutil_2_3.sys driver supports win7 and above, However, it may not be loaded on Win11 due to the black certificate issue.
+    The dbutil_2_3.sys driver supports win7 and above, Unable to load in win11, prompting that the certificate has been revoked.
     
     The echo_driver.sys driver only supports win10 and above versions, and there are currently no other restrictions.
 2. Compile the project and double-click to execute it on the computer with AV/EDR installed. (If the file is not immune to anti-virus, please write your own anti-virus shellcode loader, then convert it into shellcode and load it)
