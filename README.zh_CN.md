@@ -41,10 +41,15 @@
 1. 下载项目代码，打开`RealBlindingEDR.h` 文件，配置可利用驱动所在的绝对路径。
     
 	本项目支持两种驱动利用：[dbutil_2_3.sys](https://www.loldrivers.io/drivers/a4eabc75-edf6-4b74-9a24-6a26187adabf/) 、[echo_driver.sys](https://www.loldrivers.io/drivers/afb8bb46-1d13-407d-9866-1daa7c82ca63/)
+    
     `#define DriverType 1`  表示使用echo_driver.sys
+    
     `#define DriverType 2`  表示使用dbutil_2_3.sys
+    
     `#define DrivePath "driver_fullpath"`  用于指定驱动所在路径
+    
     dbutil_2_3.sys 驱动支持win7及以上版本，但由于证书变黑问题可能在Win11上无法加载。
+	 
 	 echo_driver.sys 驱动仅支持win10及以上版本，目前无其他限制。
 2. 编译项目并在安装有AV/EDR 的电脑上双击执行。(如果文件不免杀，请自行编写免杀的shellcode 加载器，然后将其转换成shellcode 后加载)
 3. 执行后你会看到下面的效果：（列出了注册这些回调的所有驱动名称）

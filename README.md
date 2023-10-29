@@ -43,11 +43,16 @@ This project is not targeted at any AV/EDR manufacturers. The code examples are 
 1. Download the project code, open the `RealBlindingEDR.h` file, and configure the absolute path where the available driver is located.
 	
 	This project supports two driver applications: [dbutil_2_3.sys](https://www.loldrivers.io/drivers/a4eabc75-edf6-4b74-9a24-6a26187adabf/) 、[echo_driver.sys](https://www.loldrivers.io/drivers/afb8bb46-1d13-407d-9866-1daa7c82ca63/)
+	
 	`#define DriverType 1` means using echo_driver.sys
+   
    `#define DriverType 2` means using dbutil_2_3.sys
+   
    `#define DrivePath "driver_fullpath"` is used to specify the path where the driver is located
-     The dbutil_2_3.sys driver supports win7 and above, However, it may not be loaded on Win11 due to the black certificate issue.
-The echo_driver.sys driver only supports win10 and above versions, and there are currently no other restrictions.
+     
+    The dbutil_2_3.sys driver supports win7 and above, However, it may not be loaded on Win11 due to the black certificate issue.
+    
+    The echo_driver.sys driver only supports win10 and above versions, and there are currently no other restrictions.
 2. Compile the project and double-click to execute it on the computer with AV/EDR installed. (If the file is not immune to anti-virus, please write your own anti-virus shellcode loader, then convert it into shellcode and load it)
 3. After execution, you will see the following effect: (listing the names of all drivers that registered these callbacks)
     
