@@ -4,12 +4,14 @@
 
 如果你想了解实现原理可以参考分析文章：[AV/EDR 完全致盲 - 清除6大内核回调实现](https://mp.weixin.qq.com/s/ZMTjDMMdQoOczxzZ7OAGtA)
 
+**此项目已在64位的 win7、win10、Win11 完成测试，后面我会在其他版本上进一步测试。如果你发现在某个版本有问题，可通过issue 反馈，我会进行适配。**
+
 ## 简介
 
 本项目实现了以下内核回调的清除：
 
 1. 删除 `CmRegisterCallback(Ex)` 注册的回调
-2. 删除 `MiniFilter微过滤器驱动`注册的回调 (**目前适配了win10 & win11**，win7正在适配中)
+2. 删除 `MiniFilter微过滤器驱动`注册的回调
 3. 删除 `ObRegisterCallbacks()` 注册的回调
 4. 删除 `PsSetCreateProcessNotifyRoutine(Ex)` 注册的回调
 5. 删除 `PsSetCreateThreadNotifyRoutine(Ex)` 注册的回调
@@ -28,9 +30,6 @@
 3. **Kill AV/EDR 进程**
     
     由于删除了对象句柄通知回调，现在能够以普通管理员用户权限结束AV/EDR 进程。
-
-
-目前已在win7、win10、Win11 完成测试，其他版本如有问题可通过issue 反馈，我会在后续进行适配。
 
 ## 免责声明
 

