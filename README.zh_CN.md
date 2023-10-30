@@ -2,7 +2,7 @@
 
 利用带签名驱动的任意地址读/写实现：完全致盲、或杀死、或永久关闭 AV/EDR。
 
-如果你想了解实现原理可以参考分析文章：[AV/EDR 完全致盲 - 清除6大内核回调实现](https://mp.weixin.qq.com/s/ZMTjDMMdQoOczxzZ7OAGtA)
+如果你想了解实现原理可以参考分析文章：[AV/EDR 完全致盲 - 清除6大内核回调实现](https://mp.weixin.qq.com/s/ZMTjDMMdQoOczxzZ7OAGtA)    [欢迎关注此公众号]
 
 **此项目已在64位的 win7、win10、Win11 完成测试，后面我会在其他版本上进一步测试。如果你发现在某个版本有问题，可通过issue 反馈，我会进行适配。**
 
