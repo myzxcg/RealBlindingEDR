@@ -6,7 +6,7 @@ Utilize arbitrary address read/write implementation with signed driver: complete
 
 If you want to understand the implementation principle, you can refer to the analysis article: [AV/EDR 完全致盲 - 清除6大内核回调实现（Chinese）](https://mp.weixin.qq.com/s/ZMTjDMMdQoOczxzZ7OAGtA)
 
-**This project has been tested on 64-bit win7, win10, and win11. I will further test it on other versions later. If you find a problem in a certain version, you can report it through issue and I will adapt it.**
+**Currently tested on 64-bit Windows 7/10/11 and Windows Server 2016/2019/2022. It is known to crash on Windows Server 2008/2012 R2 and will be further fixed later. If you find a problem in a certain version, you can report it through issue and I will adapt it.**
 
 
 ## Introduction
