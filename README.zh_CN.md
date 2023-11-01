@@ -4,7 +4,7 @@
 
 如果你想了解实现原理可以参考分析文章：[AV/EDR 完全致盲 - 清除6大内核回调实现](https://mp.weixin.qq.com/s/ZMTjDMMdQoOczxzZ7OAGtA)    [欢迎关注此公众号]
 
-**当前已在64位的 Windows 7/10/11、Windows Server 2016/2019/2022 完成测试。已知在Windows Server 2008/2012 R2 崩溃，后面会进一步修复。如果你发现在某个版本有问题，可通过issue 反馈，我会进行适配。**
+**当前已在64位的 Windows 7/10/11、Windows Server 2008R2/2012R2/2016/2019/2022 完成测试。如果你发现在某个版本有问题，可通过issue 反馈，我会进行适配。**
 
 ## 简介
 
@@ -58,10 +58,9 @@
 	
     ![](assets/16984937060550.jpg)
 
-4. 再次打开`RealBlindingEDR.h` 文件，添加这些你确定是AV/EDR的驱动名称到`CONST CHAR* AVDriver[] = {}` 数组中。
+4. 再次打开`RealBlindingEDR.h` 文件，添加上面第一次执行输出的所有你确定是AV/EDR的驱动名称到`CONST CHAR* AVDriver[] = {}` 数组中。
     一个配置Defender 驱动的样例：
     ![](assets/16984942671759.jpg)
-    你也可以尝试到`C:\windows\system32\drivers\` 目录下根据签名去寻找AV/EDR 的驱动名称。
     
    **注意：** 一定不要添加Windows系统正常的驱动名到此数组中，否则可能会导致系统崩溃。
 5. 再次编译并直接运行，就能自动清除指定驱动的上述所有回调。    

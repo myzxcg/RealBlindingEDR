@@ -6,7 +6,7 @@ Utilize arbitrary address read/write implementation with signed driver: complete
 
 If you want to understand the implementation principle, you can refer to the analysis article: [AV/EDR 完全致盲 - 清除6大内核回调实现（Chinese）](https://mp.weixin.qq.com/s/ZMTjDMMdQoOczxzZ7OAGtA)
 
-**Currently tested on 64-bit Windows 7/10/11 and Windows Server 2016/2019/2022. It is known to crash on Windows Server 2008/2012 R2 and will be further fixed later. If you find a problem in a certain version, you can report it through issue and I will adapt it.**
+**Currently tested on 64-bit Windows 7/10/11 and Windows Server 2008R2/2012R2/2016/2019/2022. If you find a problem in a certain version, you can report it through issue and I will adapt it.**
 
 
 ## Introduction
@@ -61,10 +61,9 @@ This project is not targeted at any AV/EDR manufacturers. The code examples are 
     
      ![](assets/16984937060550.jpg)
      
-4. Open the `RealBlindingEDR.h` file again and add the driver names that you are sure are AV/EDR to the `CONST CHAR* AVDriver[] = {}` array.
+4. Open the `RealBlindingEDR.h` file again and add all the driver names that you are sure are AV/EDR output from the first execution above to the `CONST CHAR* AVDriver[] = {}` array.
      An example of configuring the Defender driver:
      ![](assets/16984942671759.jpg)
-     You can also try to find the AV/EDR driver name based on the signature in the `C:\windows\system32\drivers\` directory.
      
      **Note:** Be sure not to add the normal driver name of Windows system to this array, otherwise it may cause the system to crash.
 5. Compile again and run it directly to automatically clear all the above callbacks of the specified driver.
