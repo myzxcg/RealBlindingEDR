@@ -58,13 +58,15 @@
 	
     ![](assets/16984937060550.jpg)
 
-4. 再次打开`RealBlindingEDR.h` 文件，找出第一次执行输出结果的驱动名称中是AV/EDR驱动的名称，并将其添加到`CONST CHAR* AVDriver[] = {}` 数组中。
-    一个配置Defender 驱动的样例：
-    ![](assets/16984942671759.jpg)
-    
-   **注意：** 一定不要添加Windows系统正常的驱动名到此数组中，否则可能会导致系统崩溃。
-5. 再次编译并直接运行，就能自动清除指定驱动的上述所有回调。    
+4. It's not over yet. You need to open the `RealBlindingEDR.h` file again, find out the driver name of AV/EDR in the output result of step 3 (you can judge it through Google or search local files), and add it to `CONST CHAR* AVDriver[ ] = {}` in the array.
 
+    An example of configuring the Defender driver:
+    ![](assets/16984942671759.jpg)
+      
+    **Note:** Be sure not to add the normal driver name of the Windows system to this array, otherwise it may cause the system to crash.
+5. Compile again and run it directly to automatically clear all the above callbacks of the specified driver (the name of the driver with deleted callbacks will be followed by a [Clear] flag).
+6. If you run it again, you will find that there are no AV/EDR names in these output callbacks.
+7. Do what you want.
 
 ## 效果
 下面演示内容并不针对此AV 厂商，仅出于教育研究目的，绝大多数AV/EDR 厂商都能达到同样的效果。

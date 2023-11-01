@@ -61,12 +61,15 @@ This project is not targeted at any AV/EDR manufacturers. The code examples are 
     
      ![](assets/16984937060550.jpg)
      
-4. Open the `RealBlindingEDR.h` file again, find out the name of the AV/EDR driver in the driver name of the first execution output result, and add it to the `CONST CHAR* AVDriver[] = {}` array.
-     An example of configuring the Defender driver:
-     ![](assets/16984942671759.jpg)
-     
-     **Note:** Be sure not to add the normal driver name of Windows system to this array, otherwise it may cause the system to crash.
-5. Compile again and run it directly to automatically clear all the above callbacks of the specified driver.
+4. It's not over yet. You need to open the `RealBlindingEDR.h` file again, find out the driver name of AV/EDR in the output result of step 3 (you can judge it through Google or search local files), and add it to `CONST CHAR* AVDriver[ ] = {}` in the array.
+
+    An example of configuring the Defender driver:
+    ![](assets/16984942671759.jpg)
+      
+    **Note:** Be sure not to add the normal driver name of the Windows system to this array, otherwise it may cause the system to crash.
+5. Compile again and run it directly to automatically clear all the above callbacks of the specified driver (the name of the driver with deleted callbacks will be followed by a [Clear] flag).
+6. If you run it again, you will find that there are no AV/EDR names in these output callbacks.
+7. Do what you want.
 
 ## Effect
 The following demonstration content is not specific to this AV manufacturer, but is only for educational and research purposes. Most AV/EDR manufacturers are affected.
