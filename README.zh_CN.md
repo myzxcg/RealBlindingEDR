@@ -58,7 +58,7 @@
 	
     ![](assets/16984937060550.jpg)
 
-4. 再次打开`RealBlindingEDR.h` 文件，添加上面第一次执行输出的所有你确定是AV/EDR的驱动名称到`CONST CHAR* AVDriver[] = {}` 数组中。
+4. 再次打开`RealBlindingEDR.h` 文件，找出第一次执行输出结果的驱动名称中是AV/EDR驱动的名称，并将其添加到`CONST CHAR* AVDriver[] = {}` 数组中。
     一个配置Defender 驱动的样例：
     ![](assets/16984942671759.jpg)
     

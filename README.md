@@ -61,7 +61,7 @@ This project is not targeted at any AV/EDR manufacturers. The code examples are 
     
      ![](assets/16984937060550.jpg)
      
-4. Open the `RealBlindingEDR.h` file again and add all the driver names that you are sure are AV/EDR output from the first execution above to the `CONST CHAR* AVDriver[] = {}` array.
+4. Open the `RealBlindingEDR.h` file again, find out the name of the AV/EDR driver in the driver name of the first execution output result, and add it to the `CONST CHAR* AVDriver[] = {}` array.
      An example of configuring the Defender driver:
      ![](assets/16984942671759.jpg)
      
