@@ -44,7 +44,8 @@
 
 ## 使用方法
 
-![](assets/17025384797366.jpg)
+![](assets/17025416387098.jpg)
+
 
 本项目支持两种驱动利用：[dbutil_2_3.sys](https://www.loldrivers.io/drivers/a4eabc75-edf6-4b74-9a24-6a26187adabf/)（支持win7及以上版本，但被杀软标记较多） 、[echo_driver.sys](https://www.loldrivers.io/drivers/afb8bb46-1d13-407d-9866-1daa7c82ca63/)（支持win10及以上版本）
 
