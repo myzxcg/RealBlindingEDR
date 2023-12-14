@@ -58,6 +58,8 @@ This project supports two driver applications: [dbutil_2_3.sys](https://www.lold
 	
     `RealBlindingEDR.exe c:\dbutil_2_3.sys 2`
 
+After the program execution is completed, it means the blinding is successful. If you want to permanently shut down anti-virus software or EDR, you also need to use the taskkill command to end its process, and then delete the executable file corresponding to this process.
+
 **Note:** Currently, these two drivers cannot be loaded on the latest version of Win11 [10.0.22621.2506] (certificate revoked, Error: c0000603)
  
 **Preview:** The third driver application will be released soon, supporting win7 - win11 (latest version).
