@@ -4,7 +4,14 @@
 
 如果你想了解实现原理可以参考分析文章：[AV/EDR 完全致盲 - 清除6大内核回调实现](https://mp.weixin.qq.com/s/ZMTjDMMdQoOczxzZ7OAGtA)    [欢迎关注此公众号]
 
+为了便于直接利用，发布此更新：
+
+**支持致盲/永久关闭：360 安全卫士、360 企业版、天擎V10、腾讯电脑管家、火绒/火绒企业版、卡巴斯基企业版、亚信EDR、Windows Defender。**
+
+**注：** 如果你有其他需要致盲的EDR产品可以发我安装包，我会根据情况实现。
+
 **当前已在64位的 Windows 7/10/11、Windows Server 2008R2/2012R2/2016/2019/2022 完成测试。如果你发现在某个版本有问题，可通过issue 反馈，我会进行适配。**
+
 
 ## 简介
 
@@ -35,38 +42,25 @@
 
 本项目不针对任何AV/EDR 厂商，代码示例仅用于研究学习，不得进行恶意利用，如有恶意利用与本人无关。
 
-## 使用方式
+## 使用方法
 
-1. 下载项目代码，打开`RealBlindingEDR.h` 文件，配置可利用驱动所在的绝对路径。
-    
-	本项目支持两种驱动利用：[dbutil_2_3.sys](https://www.loldrivers.io/drivers/a4eabc75-edf6-4b74-9a24-6a26187adabf/) 、[echo_driver.sys](https://www.loldrivers.io/drivers/afb8bb46-1d13-407d-9866-1daa7c82ca63/)
-    
-    `#define DriverType 1`  表示使用echo_driver.sys
-    
-    `#define DriverType 2`  表示使用dbutil_2_3.sys
-    
-    `#define DrivePath "driver_fullpath"`  用于指定驱动所在路径
-    
-    dbutil_2_3.sys 驱动支持win7及以上版本。
-	 
-	 echo_driver.sys 驱动支持win10及以上版本。
-	 
-	 **注意：** 目前这两个驱动在最新版Win11[10.0.22621.2506]上都已无法加载（证书被吊销,Error：c0000603）
-	 
-2. 编译项目并在安装有AV/EDR 的电脑上双击执行。(如果文件不免杀，请自行编写免杀的shellcode 加载器，然后将其转换成shellcode 后加载)
-3. 执行后你会看到下面的效果：（列出了注册这些回调的所有驱动名称）
+![](assets/17025384797366.jpg)
+
+本项目支持两种驱动利用：[dbutil_2_3.sys](https://www.loldrivers.io/drivers/a4eabc75-edf6-4b74-9a24-6a26187adabf/)（支持win7及以上版本，但被杀软标记较多） 、[echo_driver.sys](https://www.loldrivers.io/drivers/afb8bb46-1d13-407d-9866-1daa7c82ca63/)（支持win10及以上版本）
+
+1. 使用echo_driver.sys 驱动进行致盲:
 	
-    ![](assets/16984937060550.jpg)
+	`RealBlindingEDR.exe c:\echo_driver.sys 1`
+	
+2. 使用dbutil_2_3.sys 驱动进行致盲:
+	
+	`RealBlindingEDR.exe c:\dbutil_2_3.sys 2`
 
-4. 别急，还没结束。你需要再次打开`RealBlindingEDR.h` 文件，找出第3步输出结果里是AV/EDR的驱动名称（你可以通过Google 或搜索本地文件来判断），并将其添加到`CONST CHAR* AVDriver[] = {}` 数组中。
-
-   一个配置Defender 驱动的样例：
-    ![](assets/16984942671759.jpg)
+**注意：** 目前这两个驱动在最新版Win11[10.0.22621.2506]上都已无法加载（证书被吊销,Error：c0000603）
+ 
+**预告：** 即将发布第三个驱动利用程序，支持win7 - win11（最新版）。
       
-   **注意：** 一定不要添加Windows系统正常的驱动名到此数组中，否则可能会导致系统崩溃。  
-5. 再次编译并直接运行，就能自动清除指定驱动的上述所有回调（已删除回调的驱动，其名称后面会跟一个[Clear] 标志）。
-6. 如果你再一次运行，就会发现这些输出的回调中已经没有AV/EDR的名称了。
-7. 做你想做的。
+
 
 ## 效果
 下面演示内容并不针对此AV 厂商，仅出于教育研究目的，绝大多数AV/EDR 厂商都能达到同样的效果。
@@ -93,8 +87,6 @@
 3. ...
 
 ## 致谢
-
-***PS:*** 特别感谢我的领导能给我足够的时间去研究，最终才能有此项目。
 
 感谢以下文章和项目，给我思路上的帮助。
 1. [OBREGISTERCALLBACKS AND COUNTERMEASURES](https://douggemhax.wordpress.com/2015/05/27/obregistercallbacks-and-countermeasures/)

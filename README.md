@@ -6,6 +6,12 @@ Utilize arbitrary address read/write implementation with signed driver: complete
 
 If you want to understand the implementation principle, you can refer to the analysis article: [AV/EDR 完全致盲 - 清除6大内核回调实现（Chinese）](https://mp.weixin.qq.com/s/ZMTjDMMdQoOczxzZ7OAGtA)
 
+For immediate utilization, this update is released:
+
+**Supports blinding/permanent shutdown: 360 Security Guard, 360 Enterprise Edition, Tianqing V10, Tencent Computer Manager, Tinder/Tinder Enterprise Edition, Kaspersky Enterprise Edition, AsiaInfo EDR, Windows Defender.**
+
+**Note:** If you have other EDR products that need to be blinded, you can send me the installation package and I will implement it according to the situation.
+
 **Currently tested on 64-bit Windows 7/10/11 and Windows Server 2008R2/2012R2/2016/2019/2022. If you find a problem in a certain version, you can report it through issue and I will adapt it.**
 
 
@@ -40,36 +46,21 @@ This project is not targeted at any AV/EDR manufacturers. The code examples are 
 
 ## Usage
 
-1. Download the project code, open the `RealBlindingEDR.h` file, and configure the absolute path where the available driver is located.
-	
-	This project supports two driver applications: [dbutil_2_3.sys](https://www.loldrivers.io/drivers/a4eabc75-edf6-4b74-9a24-6a26187adabf/) 、[echo_driver.sys](https://www.loldrivers.io/drivers/afb8bb46-1d13-407d-9866-1daa7c82ca63/)
-	
-	`#define DriverType 1` means using echo_driver.sys
-   
-   `#define DriverType 2` means using dbutil_2_3.sys
-   
-   `#define DrivePath "driver_fullpath"` is used to specify the path where the driver is located
-     
-    The dbutil_2_3.sys driver supports win7 and above.
-    
-    The echo_driver.sys driver supports win10 and above.
-    
-    **Note:** Currently, these two drivers cannot be loaded on the latest version of Win11 [10.0.22621.2506] (certificate revoked, error: c0000603)
-    
-2. Compile the project and double-click to execute it on the computer with AV/EDR installed. (If the file is not immune to anti-virus, please write your own anti-virus shellcode loader, then convert it into shellcode and load it)
-3. After execution, you will see the following effect: (listing the names of all drivers that registered these callbacks)
-    
-     ![](assets/16984937060550.jpg)
-     
-4. It's not over yet. You need to open the `RealBlindingEDR.h` file again, find out the driver name of AV/EDR in the output result of step 3 (you can judge it through Google or search local files), and add it to `CONST CHAR* AVDriver[ ] = {}` in the array.
+![](assets/17025384797366.jpg)
 
-    An example of configuring the Defender driver:
-    ![](assets/16984942671759.jpg)
-      
-    **Note:** Be sure not to add the normal driver name of the Windows system to this array, otherwise it may cause the system to crash.
-5. Compile again and run it directly to automatically clear all the above callbacks of the specified driver (the name of the driver with deleted callbacks will be followed by a [Clear] flag).
-6. If you run it again, you will find that there are no AV/EDR names in these output callbacks.
-7. Do what you want.
+This project supports two driver applications: [dbutil_2_3.sys](https://www.loldrivers.io/drivers/a4eabc75-edf6-4b74-9a24-6a26187adabf/) (supports win7 and above versions, but the antivirus flag is relatively small More), [echo_driver.sys](https://www.loldrivers.io/drivers/afb8bb46-1d13-407d-9866-1daa7c82ca63/) (supports win10 and above versions)
+
+1. Use echo_driver.sys driver for blinding:
+	
+    `RealBlindingEDR.exe c:\echo_driver.sys 1`
+	
+2. Use the dbutil_2_3.sys driver for blinding:
+	
+    `RealBlindingEDR.exe c:\dbutil_2_3.sys 2`
+
+**Note:** Currently, these two drivers cannot be loaded on the latest version of Win11 [10.0.22621.2506] (certificate revoked, Error: c0000603)
+ 
+**Preview:** The third driver application will be released soon, supporting win7 - win11 (latest version).
 
 ## Effect
 The following demonstration content is not specific to this AV manufacturer, but is only for educational and research purposes. Most AV/EDR manufacturers are affected.

